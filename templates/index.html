@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0a1020">
+  <title>SmartCloud | Resource Command Center</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="#overview" aria-label="SmartCloud home">
+        <span class="brand-mark"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M11 25.5a7 7 0 0 1 .8-13.9A9.4 9.4 0 0 1 29.5 15a5.6 5.6 0 0 1-.1 11.2H11Z"/><path d="M14 21h4l2-4 3 8 2-4h2"/></svg></span>
+        <span><strong>SmartCloud</strong><small>RESOURCE CONTROL</small></span>
+      </a>
+      <div class="side-label">WORKSPACE</div>
+      <nav class="nav-list" aria-label="Main navigation">
+        <a class="nav-link active" href="#overview"><span class="nav-icon">◫</span> Overview</a>
+        <a class="nav-link" href="#jobs"><span class="nav-icon">▤</span> Job queue</a>
+        <a class="nav-link" href="#workers"><span class="nav-icon">▦</span> Workers</a>
+        <a class="nav-link" href="#scheduler"><span class="nav-icon">⌁</span> CPU scheduler</a>
+        <a class="nav-link" href="#safety"><span class="nav-icon">◇</span> Banker safety</a>
+        <a class="nav-link" href="#resources"><span class="nav-icon">▧</span> Resources</a>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="side-status"><span class="status-dot" id="sideDot"></span><div><strong id="sideDbStatus">MySQL status</strong><small id="sideDbDetail">Awaiting connection</small></div></div>
+        <div class="build-note"><span class="build-pip"></span> Phase 2 · Academic simulation</div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div class="mobile-brand"><span class="brand-mark small-mark">☁</span><strong>SmartCloud</strong></div>
+        <div class="topbar-context"><span class="crumb">Workspace</span><span class="crumb-slash">/</span><strong id="pageName">Overview</strong></div>
+        <div class="topbar-actions"><span class="connection-pill" id="connectionBadge"><span class="status-dot"></span> MySQL · Not checked</span><button id="refresh" class="button button-quiet"><span class="refresh-glyph">↻</span> Refresh data</button><button class="avatar" id="authToggle" type="button" aria-label="Open admin token panel" title="Admin connection">SC</button></div>
+      </header>
+
+      <div class="page-wrap">
+        {% if database_error %}<div class="alert alert-error"><strong>MySQL connection needs attention</strong><span>{{ database_error }}</span></div>{% endif %}
+        <section class="page-heading" id="overview">
+          <div><p class="eyebrow">CONTROL PLANE / PHASE 2</p><h1>Resource command center</h1><p class="page-subtitle">A real-time view of simulated servers, worker agents, jobs and OS algorithms.</p></div>
+          <div class="heading-meta"><span class="live-indicator"><i></i> LIVE VIEW</span><span class="updated-label">Last sync <strong id="lastUpdated">—</strong></span></div>
+        </section>
+
+        <section class="stats-grid" aria-label="Platform summary">
+          <article class="stat-card stat-accent-cyan"><div class="stat-top"><span>Workers online</span><span class="stat-icon">⌘</span></div><div class="stat-value" id="online">—</div><div class="stat-foot"><span id="workerCountLabel">— registered</span><span class="mini-status good">●</span></div><div class="stat-spark spark-cyan"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></article>
+          <article class="stat-card stat-accent-violet"><div class="stat-top"><span>Jobs tracked</span><span class="stat-icon">▤</span></div><div class="stat-value" id="jobsCount">—</div><div class="stat-foot"><span id="jobFootLabel">Across all statuses</span><span class="mini-status violet">●</span></div><div class="stat-spark spark-violet"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></article>
+          <article class="stat-card stat-accent-amber"><div class="stat-top"><span>Queued jobs</span><span class="stat-icon">◷</span></div><div class="stat-value" id="queuedCount">—</div><div class="stat-foot"><span id="runningLabel">— running</span><span class="mini-status warning">●</span></div><div class="stat-spark spark-amber"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></article>
+          <article class="stat-card stat-accent-green"><div class="stat-top"><span>CPU capacity free</span><span class="stat-icon">⌁</span></div><div class="stat-value"><span id="freeCpu">—</span><small> cores</small></div><div class="stat-foot"><span id="cpuTotalLabel">of — total cores</span><span class="mini-status good">●</span></div><div class="stat-spark spark-green"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></article>
+        </section>
+
+        <section class="content-grid overview-grid">
+          <article class="card resource-overview-card">
+            <div class="card-heading"><div><span class="section-kicker">CAPACITY</span><h2>Logical server pool</h2><p class="card-subtitle">CPU, RAM and storage allocation by simulated server</p></div><span class="soft-tag" id="serverCountTag">— servers</span></div>
+            <div id="serverCards" class="server-cards"><div class="empty-state">Connect to MySQL and refresh to load server capacity.</div></div>
+          </article>
+          <article class="card quick-actions-card">
+            <div class="card-heading"><div><span class="section-kicker">QUICK ACTIONS</span><h2>Control panel</h2><p class="card-subtitle">Jump into a Phase 2 operation</p></div><span class="quick-symbol">✳</span></div>
+            <a class="quick-action" href="#jobs"><span class="action-icon action-cyan">＋</span><span><strong>Submit a job</strong><small>Queue an approved worker task</small></span><b>↗</b></a>
+            <a class="quick-action" href="#scheduler"><span class="action-icon action-violet">⌁</span><span><strong>Run CPU scheduling</strong><small>FCFS, Priority or Round Robin</small></span><b>↗</b></a>
+            <a class="quick-action" href="#safety"><span class="action-icon action-green">◇</span><span><strong>Check safe state</strong><small>Calculate a Banker safe sequence</small></span><b>↗</b></a>
+            <div class="quick-note"><span class="info-mark">i</span><span>This project uses logical server simulation; it does not provision real cloud instances.</span></div>
+          </article>
+        </section>
+
+        <section class="card section-card" id="jobs">
+          <div class="card-heading"><div><span class="section-kicker">WORKLOAD</span><h2>Job queue</h2><p class="card-subtitle">Submit approved tasks and inspect the latest execution state.</p></div><span class="soft-tag" id="jobTableCount">0 records</span></div>
+          <form id="jobForm" class="form-panel">
+            <div class="form-grid job-form-grid">
+              <label>Job name<input name="name" maxlength="120" required placeholder="e.g. weekly-system-check"></label>
+              <label>Approved task<select name="job_type"><option value="system_info">System information</option><option value="cpu_demo">CPU benchmark demo (3 sec)</option><option value="disk_info">Disk information</option></select></label>
+              <label>CPU cores<input name="cpu_cores" type="number" min="1" max="64" value="1" required></label>
+              <label>RAM (MB)<input name="ram_mb" type="number" min="32" max="262144" value="128" required></label>
+              <label>Disk (MB)<input name="disk_mb" type="number" min="0" max="1048576" value="100" required></label>
+            </div>
+            <div class="form-footer"><span class="form-hint"><span class="green-check">✓</span> Worker runs allowlisted tasks only; arbitrary shell commands are disabled.</span><button class="button button-primary" type="submit">Submit job <span>→</span></button></div>
+          </form>
+          <div id="submitResult" class="inline-result hidden" role="status"></div>
+          <div class="table-toolbar"><div class="table-title">Recent jobs <span class="tiny-dot"></span></div><label class="search-box"><span>⌕</span><input id="jobSearch" type="search" placeholder="Search name, ID or status"></label></div>
+          <div class="table-wrap"><table><thead><tr><th>Job</th><th>Task type</th><th>Resources</th><th>Status</th><th>Worker</th><th>Updated</th></tr></thead><tbody id="jobsBody"><tr><td colspan="6" class="table-empty">Enter your admin token above and select Refresh data.</td></tr></tbody></table></div>
+        </section>
+
+        <section class="card section-card" id="workers">
+          <div class="card-heading"><div><span class="section-kicker">EXECUTION NODES</span><h2>Worker inventory</h2><p class="card-subtitle">Agent heartbeats and machine-reported capacity.</p></div><span class="soft-tag" id="workerTableCount">0 workers</span></div>
+          <div class="table-wrap"><table><thead><tr><th>Worker</th><th>Health</th><th>CPU load</th><th>RAM available</th><th>Disk free</th><th>Platform</th><th>Last heartbeat</th></tr></thead><tbody id="workersBody"><tr><td colspan="7" class="table-empty">No worker data loaded.</td></tr></tbody></table></div>
+        </section>
+
+        <section class="content-grid tools-grid">
+          <article class="card tool-card section-card" id="scheduler">
+            <div class="card-heading"><div><span class="section-kicker">OPERATING SYSTEMS</span><h2>CPU scheduler lab</h2><p class="card-subtitle">Run textbook algorithms and inspect process timing.</p></div><span class="tool-icon tool-icon-violet">⌁</span></div>
+            <form id="schedulerForm">
+              <div class="form-grid two-col"><label>Scheduling algorithm<select name="algorithm"><option value="fcfs">FCFS</option><option value="priority">Non-preemptive Priority</option><option value="round_robin">Round Robin</option></select></label><label>Time quantum<input name="quantum" type="number" min="1" value="2"></label></div>
+              <label>Process input <span class="label-helper">JSON format · smaller priority value wins</span><textarea name="processes" rows="5" required>[{"pid":"P1","arrival":0,"burst":5,"priority":2},{"pid":"P2","arrival":1,"burst":3,"priority":1},{"pid":"P3","arrival":2,"burst":1,"priority":3}]</textarea></label>
+              <button class="button button-primary" type="submit">Run simulation <span>→</span></button>
+            </form>
+            <div id="scheduleResult" class="result-area"><div class="empty-result"><span>⌁</span><strong>Schedule results appear here</strong><small>Execute a scheduler to view its Gantt chart and waiting-time metrics.</small></div></div>
+          </article>
+          <article class="card tool-card section-card" id="safety">
+            <div class="card-heading"><div><span class="section-kicker">DEADLOCK AVOIDANCE</span><h2>Banker’s safety check</h2><p class="card-subtitle">Test whether the current resource state is safe.</p></div><span class="tool-icon tool-icon-green">◇</span></div>
+            <form id="bankerForm">
+              <label>Available vector, allocation and maximum matrices <span class="label-helper">Resource order must match in every vector</span><textarea name="banker" rows="9" required>{"available":[3,3,2],"allocation":[[0,1,0],[2,0,0],[3,0,2],[2,1,1],[0,0,2]],"maximum":[[7,5,3],[3,2,2],[9,0,2],[2,2,2],[4,3,3]]}</textarea></label>
+              <button class="button button-primary" type="submit">Check safety <span>→</span></button>
+            </form>
+            <div id="bankerResult" class="result-area"><div class="empty-result"><span>◇</span><strong>Safety result appears here</strong><small>Need = Maximum − Allocation. A safe state includes a complete safe sequence.</small></div></div>
+          </article>
+        </section>
+
+        <section class="card section-card" id="resources">
+          <div class="card-heading"><div><span class="section-kicker">RESOURCE GOVERNANCE</span><h2>Allocation ledger</h2><p class="card-subtitle">Reserve or release capacity from the logical server pool. Updates are transactional in MySQL.</p></div><span class="tool-icon tool-icon-cyan">▧</span></div>
+          <form id="resourceForm" class="form-panel">
+            <div class="form-grid resource-form-grid">
+              <label>Owner / job reference<input name="owner" required maxlength="120" placeholder="demo-job-01"></label>
+              <label>CPU cores<input name="cpu_cores" type="number" min="0" value="1" required></label>
+              <label>RAM (MB)<input name="ram_mb" type="number" min="0" value="512" required></label>
+              <label>Storage (MB)<input name="disk_mb" type="number" min="0" value="1024" required></label>
+            </div>
+            <div class="form-footer"><span class="form-hint">At least one resource must be greater than zero.</span><div class="button-group"><button class="button button-secondary" id="releaseResource" type="button">Release by owner</button><button class="button button-primary" type="submit">Allocate resources <span>→</span></button></div></div>
+          </form>
+          <div id="resourceResult" class="inline-result hidden" role="status"></div>
+          <div class="content-grid ledger-grid">
+            <div><div class="table-toolbar"><div class="table-title">Active allocations</div></div><div class="table-wrap"><table><thead><tr><th>Owner</th><th>Server</th><th>CPU</th><th>RAM</th><th>Storage</th><th>Allocated at</th></tr></thead><tbody id="allocationsBody"><tr><td colspan="6" class="table-empty">No active allocation data loaded.</td></tr></tbody></table></div></div>
+            <div><div class="table-toolbar"><div class="table-title">Recent resource events</div></div><div class="table-wrap"><table><thead><tr><th>Event</th><th>Owner</th><th>Resources</th><th>Time</th></tr></thead><tbody id="logsBody"><tr><td colspan="4" class="table-empty">No resource events loaded.</td></tr></tbody></table></div></div>
+          </div>
+        </section>
+
+        <footer class="page-footer"><span>SmartCloud Platform <b>v2.0</b></span><span>Built for OS + DBMS coursework <i>·</i> MySQL persistence <i>·</i> Simulated server pool</span></footer>
+      </div>
+    </main>
+  </div>
+
+  <div class="auth-drawer" id="authDrawer" aria-live="polite">
+    <div class="auth-copy"><span class="auth-lock">⌑</span><div><strong>Admin access</strong><small>Token is held in this page only.</small></div></div>
+    <label for="token">ADMIN_TOKEN</label><div class="auth-entry"><input id="token" type="password" autocomplete="off" placeholder="Paste your admin token"><button id="toggleToken" type="button" title="Show or hide token">◉</button></div>
+    <button id="connect" class="button button-primary auth-button" type="button">Connect dashboard <span>→</span></button>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
